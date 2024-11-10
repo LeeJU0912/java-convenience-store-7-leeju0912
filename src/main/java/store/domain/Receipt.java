@@ -3,6 +3,7 @@ package store.domain;
 import store.dto.BuyProducts;
 import store.dto.PromotionProducts;
 
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static java.lang.Math.max;
@@ -36,14 +37,15 @@ public class Receipt {
     }
 
     public void addBuyProductQuantity(Product product, Long quantity) {
-        if (!buyProducts.buyProducts().containsKey(product.getName())) {
+        Map<String, BuyProduct> buyProducts = getBuyProducts().buyProducts();
+        if (!buyProducts.containsKey(product.getName())) {
             addBuyProduct(product);
         }
-        buyProducts.addBuyProductQuantity(product, quantity);
+        buyProducts.get(product.getName()).addQuantity(quantity);
     }
 
-    public void addPromotionProductQuantity(String productName, Long quantity) {
-        promotionProducts.addPromotionQuantity(productName, quantity);
+    public void addPromotionProductQuantity(Product product, Long quantity) {
+        promotionProducts.addPromotionQuantity(product, quantity);
     }
 
     public Long calculateTotalQuantity() {
@@ -60,12 +62,12 @@ public class Receipt {
 
     public Long calculateMembershipDiscount() {
         if (membershipDiscount) {
-            return min(8000L, calculateTotal() * 100 / 70);
+            return min(8000L, calculateTotal() * 70 / 100);
         }
         return 0L;
     }
 
     public Long calculateOverallCost() {
-        return max(0L, (calculateTotal() - calculatePromotionTotal()) - calculateMembershipDiscount());
+        return max(0L, (calculateMembershipDiscount() - calculatePromotionTotal()));
     }
 }
