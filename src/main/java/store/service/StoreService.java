@@ -8,15 +8,14 @@ import store.dto.Products;
 import store.domain.Promotion;
 import store.dto.PromotionProducts;
 import store.dto.Promotions;
+import store.validator.FileValidator;
 import store.validator.ValidatorMessage;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.time.LocalDateTime;
-import java.util.Arrays;
 import java.util.Map;
-import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class StoreService {
@@ -75,21 +74,23 @@ public class StoreService {
     private void addProducts() {
         try {
             BufferedReader reader = new BufferedReader(new FileReader(PRODUCTS_FILE_PATH));
-
             String product = reader.readLine();
             while((product = reader.readLine()) != null) {
-                System.out.println(product);
-//                FileValidator.validateProductParsing(product);
-                Product parsedProduct = parseProduct(product);
-                if (parsedProduct.getPromotionName().equals("null")) {
-                    getProducts().addProduct(parsedProduct);
-                    continue;
-                }
-                getPromotionProducts().addProduct(parsedProduct);
+                FileValidator.validateProductParsing(product);
+                saveProductFromFile(product);
             }
         } catch (IOException e) {
             throw new IllegalArgumentException(ValidatorMessage.FILE_NOT_FOUND.getErrorMessage());
         }
+    }
+
+    private void saveProductFromFile(String product) {
+        Product parsedProduct = parseProduct(product);
+        if (parsedProduct.getPromotionName().equals("null")) {
+            getProducts().addProduct(parsedProduct);
+            return;
+        }
+        getPromotionProducts().addProduct(parsedProduct);
     }
 
     private Product parseProduct(String productData) {
@@ -100,16 +101,19 @@ public class StoreService {
     private void addPromotions() {
         try {
             BufferedReader reader = new BufferedReader(new FileReader(PROMOTIONS_FILE_PATH));
-
             String promotion = reader.readLine();
             while((promotion = reader.readLine()) != null) {
-//                FileValidator.validatePromotionParsing(promotion);
-                Promotion parsedPromotion = parsePromotion(promotion);
-                getPromotions().addPromotion(parsedPromotion);
+                FileValidator.validatePromotionParsing(promotion);
+                savePromotionFromFile(promotion);
             }
         } catch (IOException e) {
             throw new IllegalArgumentException(ValidatorMessage.FILE_NOT_FOUND.getErrorMessage());
         }
+    }
+
+    private void savePromotionFromFile(String promotion) {
+        Promotion parsedPromotion = parsePromotion(promotion);
+        getPromotions().addPromotion(parsedPromotion);
     }
 
     private Promotion parsePromotion(String promotion) {
@@ -133,26 +137,37 @@ public class StoreService {
     }
 
     private BuyProducts parseBuyProducts(String input) {
-        Map<String, BuyProduct> parsedBuyProducts = new ConcurrentHashMap<>();
         String[] buyProductsInfo = splitInput(input);
+        return new BuyProducts(convertToBuyProducts(buyProductsInfo));
+    }
 
+    private Map<String, BuyProduct> convertToBuyProducts(String[] buyProductsInfo) {
+        Map<String, BuyProduct> parsedBuyProducts = new ConcurrentHashMap<>();
         for (String buyProductInfo : buyProductsInfo) {
-            buyProductInfo = buyProductInfo.replaceAll("[\\[\\]]", "");
-            String[] splitBuyProductInfo = buyProductInfo.split("-");
-
-            String buyProductName = splitBuyProductInfo[0];
-            Long buyProductQuantity = Long.parseLong(splitBuyProductInfo[1]);
-
-            Long productPrice = getProducts().getProductPrice(buyProductName);
-
-            if (productPrice == null) {
-                productPrice = getPromotionProducts().getProductPrice(buyProductName);
-            }
-
-            parsedBuyProducts.put(buyProductName, new BuyProduct(buyProductName, buyProductQuantity, productPrice));
+            String[] splitBuyProductInfo = splitBuyProductInfo(buyProductInfo);
+            parsedBuyProducts.put(splitBuyProductInfo[0], convertToBuyProduct(splitBuyProductInfo));
         }
+        return parsedBuyProducts;
+    }
 
-        return new BuyProducts(parsedBuyProducts);
+    private BuyProduct convertToBuyProduct(String[] splitBuyProductInfo) {
+        String buyProductName = splitBuyProductInfo[0];
+        Long buyProductQuantity = Long.parseLong(splitBuyProductInfo[1]);
+        Long productPrice = getProductPrice(buyProductName);
+        return new BuyProduct(buyProductName, buyProductQuantity, productPrice);
+    }
+
+    private Long getProductPrice(String buyProductName) {
+        Long productPrice = getProducts().getProductPrice(buyProductName);
+        if (productPrice == null) {
+            productPrice = getPromotionProducts().getProductPrice(buyProductName);
+        }
+        return productPrice;
+    }
+
+    private static String[] splitBuyProductInfo(String buyProductInfo) {
+        buyProductInfo = buyProductInfo.replaceAll("[\\[\\]]", "");
+        return buyProductInfo.split("-");
     }
 
     private String[] splitInput(String input) {
@@ -174,9 +189,9 @@ public class StoreService {
     public boolean checkPromotionProductStock(String productName) {
         Long promotionProductStockQuantity = getPromotionProducts().getPromotionProductStockQuantity(productName);
         if (promotionProductStockQuantity < getPromotionProducts().getPromotionValidQuantity(productName)) {
-            return true;
+            return false;
         }
-        return false;
+        return true;
     }
 
     public void buyProcessNotPromotion(String productName) {
@@ -252,24 +267,23 @@ public class StoreService {
 
 
     public void validateInputBuyProducts(String input) {
-        // 잘 쪼개지는지
-        String[] productsWithBracket = Arrays.stream(input.split(",")).filter(s -> !s.isEmpty()).toArray(String[]::new);
-//        Arrays.stream(productsWithBracket).forEach(s -> );
-
-
-        Map<String, BuyProduct> parsedBuyProducts = new ConcurrentHashMap<>();
         String[] buyProductsInfo = splitInput(input);
 
         for (String buyProductInfo : buyProductsInfo) {
-            buyProductInfo = buyProductInfo.replaceAll("[\\[\\]]", "");
-            String[] splitBuyProductInfo = buyProductInfo.split("-");
+            String[] splitBuyProductInfo = splitBuyProductInfo(buyProductInfo);
 
             if (splitBuyProductInfo.length != 2) {
                 throw new IllegalArgumentException(ValidatorMessage.WRONG_BUY_FORMAT.getErrorMessage());
             }
 
             String buyProductName = splitBuyProductInfo[0];
-            Long buyProductQuantity = Long.parseLong(splitBuyProductInfo[1]);
+            Long buyProductQuantity;
+            try {
+                buyProductQuantity = Long.parseLong(splitBuyProductInfo[1]);
+            } catch (NumberFormatException e) {
+                throw new IllegalArgumentException(ValidatorMessage.WRONG_BUY_FORMAT.getErrorMessage());
+            }
+
 
             if (!getPromotionProducts().getProducts().containsKey(buyProductName)
                     && !getProducts().getProducts().containsKey(buyProductName)) {
@@ -281,24 +295,15 @@ public class StoreService {
                 product = getProducts().getProducts().get(buyProductName);
             }
             Long productQuantity = product.getStock();
-            if (productQuantity == null) {
-                productQuantity = getProducts().getProductQuantity(buyProductName);
-            }
 
             if (buyProductQuantity > productQuantity) {
                 throw new IllegalArgumentException(ValidatorMessage.BUY_PRODUCT_OVER_STOCK.getErrorMessage());
             }
         }
-
-        // 쪼개진 값들이 잘 저장되는지
-
-        // 재고에 존재하는 물건 이름인지
-
-        // 재고 범위를 넘지 않는지
     }
 
     public void validateInputYesOrNo(String input) {
-        if (!Objects.equals(input, "Y") && !Objects.equals(input, "N")) {
+        if (!input.equals("Y") && !input.equals("N")) {
             throw new IllegalArgumentException(ValidatorMessage.NOT_YES_OR_NO.getErrorMessage());
         }
     }
