@@ -38,11 +38,12 @@ public class PromotionProducts extends Products {
 
     public Long getPromotionOnlyProductQuantity(BuyProduct buyProduct) {
         Product product = getProducts().get(buyProduct.getName());
-        return min(product.getStock(), buyProduct.getQuantity()) / (product.getPromotion().promotePlus() + product.getPromotion().promoteQuantity());
+        return min(product.getStock(), buyProduct.getQuantity()) / product.getPromotion().promoteQuantity();
     }
 
-    public void addPromotionQuantity(String productName, Long quantity) {
-        getProducts().get(productName).updateStock(quantity);
+    public void addPromotionQuantity(Product product, Long quantity) {
+        getProducts().putIfAbsent(product.getName(), new Product(product.getName(), product.getPrice(), 0L, product.getPromotionName()));
+        getProducts().get(product.getName()).updateStock(quantity);
     }
     public void reducePromotionQuantity(String productName, Long quantity) {
         getProducts().get(productName).reduceStock(quantity);
