@@ -68,6 +68,9 @@ public class Receipt {
     }
 
     public Long calculateOverallCost() {
-        return max(0L, (calculateMembershipDiscount() - calculatePromotionTotal()));
+        if (membershipDiscount) {
+            return max(0L, (calculateMembershipDiscount() - calculatePromotionTotal()));
+        }
+        return max(0L, (calculateTotal() - calculatePromotionTotal()));
     }
 }
