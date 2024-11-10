@@ -15,6 +15,7 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -167,11 +168,11 @@ public class StoreService {
 
     private static String[] splitBuyProductInfo(String buyProductInfo) {
         buyProductInfo = buyProductInfo.replaceAll("[\\[\\]]", "");
-        return buyProductInfo.split("-");
+        return Arrays.stream(buyProductInfo.split("-")).filter(productInfo -> !productInfo.isEmpty()).toArray(String[]::new);
     }
 
     private String[] splitInput(String input) {
-        return input.split(",");
+        return Arrays.stream(input.split(",")).filter(productInfo -> !productInfo.isEmpty()).toArray(String[]::new);
     }
 
     public Long calculateSameProductStockQuantity(BuyProduct buyProduct) {
@@ -180,10 +181,6 @@ public class StoreService {
 
     public Long calculatePromotionOnlyProductQuantity(BuyProduct buyProduct) {
         return getPromotionProducts().getPromotionOnlyProductQuantity(buyProduct);
-    }
-
-    public void buyProcessPromotion(String productName) {
-
     }
 
     public boolean checkPromotionProductStock(String productName) {
@@ -204,34 +201,37 @@ public class StoreService {
         if (promotionProduct == null) {
             return;
         }
-
-        // 프로모션
         BuyProduct buyProduct = getBuyProducts().buyProducts().get(productName);
         Long nowQuantity = buyProduct.getQuantity();
-
-
         Long nowPromotionProductStock = promotionProduct.getStock();
 
+        buyAndReduceStockFromPromotionProduct(nowQuantity, nowPromotionProductStock, promotionProduct);
+    }
+
+    private void buyAndReduceStockFromPromotionProduct(Long nowQuantity, Long nowPromotionProductStock, Product promotionProduct) {
         if (nowQuantity <= nowPromotionProductStock) {
-            reducePromotionProductQuantity(nowQuantity, promotionProduct);
-            addReceiptBuyProductQuantity(nowQuantity, promotionProduct);
-            reduceBuyProductQuantity(nowQuantity, promotionProduct);
+            buyAndReduceFromPromotionProductWithQuantity(nowQuantity, promotionProduct);
             return;
         }
+        buyAndReduceFromPromotionProductWithQuantity(nowPromotionProductStock, promotionProduct);
+    }
 
-        reducePromotionProductQuantity(nowPromotionProductStock, promotionProduct);
-        addReceiptBuyProductQuantity(nowPromotionProductStock, promotionProduct);
-        reduceBuyProductQuantity(nowPromotionProductStock, promotionProduct);
+    private void buyAndReduceFromPromotionProductWithQuantity(Long nowQuantity, Product promotionProduct) {
+        reducePromotionProductQuantity(nowQuantity, promotionProduct);
+        addReceiptBuyProductQuantity(nowQuantity, promotionProduct);
+        reduceBuyProductQuantity(nowQuantity, promotionProduct);
     }
 
     private void calculateStockNotPromotionPart(String productName) {
-        // 일반
         BuyProduct buyProduct = getBuyProducts().buyProducts().get(productName);
         Long nowQuantity = buyProduct.getQuantity();
 
         Product product = getProducts().getProductByName(productName);
         Long productStock = product.getStock();
+        buyAndReduceStockFromProduct(productStock, product, nowQuantity);
+    }
 
+    private void buyAndReduceStockFromProduct(Long productStock, Product product, Long nowQuantity) {
         reduceProductQuantity(productStock, product);
         addReceiptBuyProductQuantity(nowQuantity, product);
         reduceBuyProductQuantity(nowQuantity, product);
@@ -247,10 +247,6 @@ public class StoreService {
 
     private void reduceBuyProductQuantity(Long quantity, Product product) {
         getBuyProducts().buyProducts().get(product.getName()).reduceQuantity(quantity);
-    }
-
-    private void addReceiptPromotionQuantity(Long quantity, String productName) {
-
     }
 
     private void addReceiptBuyProductQuantity(Long quantity, Product product) {
@@ -271,34 +267,45 @@ public class StoreService {
 
         for (String buyProductInfo : buyProductsInfo) {
             String[] splitBuyProductInfo = splitBuyProductInfo(buyProductInfo);
+            checkBuyProductInfoSize(splitBuyProductInfo);
+            Long buyProductQuantity = checkConvertBuyProductQuantity(splitBuyProductInfo);
+            String buyProductName = checkValidBuyProductName(splitBuyProductInfo);
+            checkBuyProductQuantityOverStock(buyProductName, buyProductQuantity);
+        }
+    }
 
-            if (splitBuyProductInfo.length != 2) {
-                throw new IllegalArgumentException(ValidatorMessage.WRONG_BUY_FORMAT.getErrorMessage());
-            }
+    private static void checkBuyProductInfoSize(String[] splitBuyProductInfo) {
+        if (splitBuyProductInfo.length != 2) {
+            throw new IllegalArgumentException(ValidatorMessage.WRONG_BUY_FORMAT.getErrorMessage());
+        }
+    }
 
-            String buyProductName = splitBuyProductInfo[0];
-            Long buyProductQuantity;
-            try {
-                buyProductQuantity = Long.parseLong(splitBuyProductInfo[1]);
-            } catch (NumberFormatException e) {
-                throw new IllegalArgumentException(ValidatorMessage.WRONG_BUY_FORMAT.getErrorMessage());
-            }
+    private static Long checkConvertBuyProductQuantity(String[] splitBuyProductInfo) {
+        try {
+            return Long.parseLong(splitBuyProductInfo[1]);
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException(ValidatorMessage.WRONG_BUY_FORMAT.getErrorMessage());
+        }
+    }
 
+    private String checkValidBuyProductName(String[] splitBuyProductInfo) {
+        String buyProductName = splitBuyProductInfo[0];
+        if (!getPromotionProducts().getProducts().containsKey(buyProductName)
+                && !getProducts().getProducts().containsKey(buyProductName)) {
+            throw new IllegalArgumentException(ValidatorMessage.NO_PRODUCT.getErrorMessage());
+        }
+        return buyProductName;
+    }
 
-            if (!getPromotionProducts().getProducts().containsKey(buyProductName)
-                    && !getProducts().getProducts().containsKey(buyProductName)) {
-                throw new IllegalArgumentException(ValidatorMessage.NO_PRODUCT.getErrorMessage());
-            }
+    private void checkBuyProductQuantityOverStock(String buyProductName, Long buyProductQuantity) {
+        Product product = getPromotionProducts().getProducts().get(buyProductName);
+        if (product == null) {
+            product = getProducts().getProducts().get(buyProductName);
+        }
+        Long productQuantity = product.getStock();
 
-            Product product = getPromotionProducts().getProducts().get(buyProductName);
-            if (product == null) {
-                product = getProducts().getProducts().get(buyProductName);
-            }
-            Long productQuantity = product.getStock();
-
-            if (buyProductQuantity > productQuantity) {
-                throw new IllegalArgumentException(ValidatorMessage.BUY_PRODUCT_OVER_STOCK.getErrorMessage());
-            }
+        if (buyProductQuantity > productQuantity) {
+            throw new IllegalArgumentException(ValidatorMessage.BUY_PRODUCT_OVER_STOCK.getErrorMessage());
         }
     }
 
