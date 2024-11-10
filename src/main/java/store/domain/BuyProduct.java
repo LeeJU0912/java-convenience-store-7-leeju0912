@@ -1,7 +1,7 @@
 package store.domain;
 
 public class BuyProduct {
-    private String name;
+    private final String name;
     private Long quantity;
     private Long price;
 
@@ -17,10 +17,6 @@ public class BuyProduct {
 
     public Long getQuantity() {
         return quantity;
-    }
-
-    public Long getPrice() {
-        return price;
     }
 
     public Long calculatePriceSum() {
