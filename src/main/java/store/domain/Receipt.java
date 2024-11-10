@@ -62,14 +62,14 @@ public class Receipt {
 
     public Long calculateMembershipDiscount() {
         if (membershipDiscount) {
-            return min(8000L, calculateTotal() * 70 / 100);
+            return min(8000L, calculateTotal() * 30 / 100);
         }
         return 0L;
     }
 
     public Long calculateOverallCost() {
         if (membershipDiscount) {
-            return max(0L, (calculateMembershipDiscount() - calculatePromotionTotal()));
+            return max(0L, (calculateTotal() - calculateMembershipDiscount() - calculatePromotionTotal()));
         }
         return max(0L, (calculateTotal() - calculatePromotionTotal()));
     }
