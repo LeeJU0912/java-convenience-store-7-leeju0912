@@ -48,7 +48,7 @@ public class OutputView {
 
     private static void printReceiptBuyProducts(Receipt receipt) {
         BuyProducts buyProducts = receipt.getBuyProducts();
-        buyProducts.buyProducts().values().forEach(buyProduct -> System.out.println(buyProduct.getName() + "\t\t" + buyProduct.getQuantity() + " \t" + buyProduct.calculatePriceSum()));
+        buyProducts.buyProducts().values().forEach(buyProduct -> System.out.println(buyProduct.getName() + "\t\t" + formatter.format(buyProduct.getQuantity()) + " \t" + formatter.format(buyProduct.calculatePriceSum())));
     }
 
     private static void printReceiptPromotionProducts(Receipt receipt) {
