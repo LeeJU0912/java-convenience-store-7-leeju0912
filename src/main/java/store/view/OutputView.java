@@ -59,7 +59,7 @@ public class OutputView {
     private static void printReceiptCalculatedValues(Receipt receipt) {
         System.out.println("총구매액\t\t" + formatter.format(receipt.calculateTotalQuantity()) + "\t" + formatter.format((receipt.calculateTotal())));
         System.out.println("행사할인\t\t\t" + filterReceiptZero(receipt.calculatePromotionTotal()));
-        System.out.println("멤버십할인\t\t\t" + filterReceiptZero(receipt.calculateTotal() - receipt.calculateMembershipDiscount()));
+        System.out.println("멤버십할인\t\t\t" + filterReceiptZero(receipt.calculateMembershipDiscount()));
         System.out.println("내실돈\t\t\t " + formatter.format(receipt.calculateOverallCost()));
     }
 
