@@ -38,6 +38,22 @@ class ApplicationTest extends NsTest {
     }
 
     @Test
+    void 기간에_해당하는_프로모션_적용() {
+        assertNowTest(() -> {
+            run("[사이다-2]", "Y", "Y", "N", "N");
+            assertThat(output().replaceAll("\\s", "")).contains("내실돈2,000", "사이다3");
+        }, LocalDate.of(2024, 2, 1).atStartOfDay());
+    }
+
+    @Test
+    void 기간에_해당하는_프로모션_적용_멤버십_할인() {
+        assertNowTest(() -> {
+            run("[사이다-2]", "Y", "Y", "Y", "N");
+            assertThat(output().replaceAll("\\s", "")).contains("내실돈1,100", "사이다1");
+        }, LocalDate.of(2024, 2, 1).atStartOfDay());
+    }
+
+    @Test
     void 여러_개의_일반_상품_구매() {
         assertSimpleTest(() -> {
             run("[비타민워터-3],[물-2],[정식도시락-2]", "N", "N");
