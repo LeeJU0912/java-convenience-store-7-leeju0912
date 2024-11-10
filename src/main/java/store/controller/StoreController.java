@@ -62,8 +62,8 @@ public class StoreController {
         Long promotionQuantity = storeService.calculatePromotionOnlyProductQuantity(buyProduct);
         OutputView.printGetMoreProductsForPromotion(buyProduct.getName(), promotionQuantity);
         if (inputYesOrNo().equals("Y")) {
-            storeService.buyPromotionForFree(buyProduct.getName(), promotionQuantity);
-            storeService.getReceipt().addPromotionProductQuantity(buyProduct.getName(), promotionQuantity);
+            storeService.buyPromotionForFree(storeService.getPromotionProducts().getProductByName(buyProduct.getName()), promotionQuantity);
+            storeService.addReceiptPromotionProductQuantity(buyProduct.getName(), promotionQuantity);
         }
     }
 

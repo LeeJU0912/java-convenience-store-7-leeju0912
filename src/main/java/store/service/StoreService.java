@@ -257,8 +257,9 @@ public class StoreService {
         getReceipt().setMembershipDiscount();
     }
 
-    public void buyPromotionForFree(String productName, Long promotionQuantity) {
-        getPromotionProducts().reducePromotionQuantity(productName, promotionQuantity);
+    public void buyPromotionForFree(Product productName, Long promotionQuantity) {
+        getPromotionProducts().reducePromotionQuantity(productName.getName(), promotionQuantity);
+        getReceipt().addBuyProductQuantity(productName, promotionQuantity);
     }
 
 
@@ -313,5 +314,10 @@ public class StoreService {
         if (!input.equals("Y") && !input.equals("N")) {
             throw new IllegalArgumentException(ValidatorMessage.NOT_YES_OR_NO.getErrorMessage());
         }
+    }
+
+    public void addReceiptPromotionProductQuantity(String productName, Long promotionQuantity) {
+        Product product = getPromotionProducts().getProductByName(productName);
+        getReceipt().addPromotionProductQuantity(product, promotionQuantity);
     }
 }
