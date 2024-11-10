@@ -2,8 +2,8 @@ package store.domain;
 
 public class Product {
 
-    private String name;
-    private Long price;
+    private final String name;
+    private final Long price;
     private Long stock;
     private String promotionName;
 
