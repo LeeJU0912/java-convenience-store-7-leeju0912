@@ -13,7 +13,6 @@ public class StoreController {
     }
 
     public void run() {
-        // 재고 물건 파일 로드 (최초 1회)
         initFileLoad();
         productBuyProcess();
     }
@@ -27,17 +26,11 @@ public class StoreController {
 
     private void productBuyProcess() {
         do {
-            // 재고 물건 목록
             initProductBuyList();
-            // 구매 희망 물건 파싱
             getBuyProducts();
-            // 모든 구매 희망 물건에 대해 정산
             processBuyProducts();
-            // 멤버십 할인 적용 유무 확인
             checkApplyMembership();
-            // 최종 계산 결과 출력
             printReceiptResult();
-            // 재구매 확인 출력
         } while (buyAgain());
     }
 
@@ -52,25 +45,10 @@ public class StoreController {
 
     private void processBuyProducts() {
         for (BuyProduct buyProduct : storeService.getBuyProducts().buyProducts().values()) {
-            if (isNowInPromotionDate(buyProduct)) {
-                if (storeService.checkPromotionProductStock(buyProduct.getName())) {
-                    // 프로모션 공짜 물건 추가 유무 확인 후 구매 처리
-                    processGetPromotionProduct(buyProduct);
-
-                    // 프로모션 없는 재고 확인
-                    Long allSameProductQuantity = storeService.calculateSameProductStockQuantity(buyProduct);
-                    Long promotionIncludeProductQuantity = storeService.calculatePromotionOnlyProductQuantity(buyProduct);
-                    // 프로모션 적용 안되는 재고만 추출
-                    Long leftStock = allSameProductQuantity - promotionIncludeProductQuantity;
-
-                    // 프로모션 적용 안되는 재고에 대해 살지 말지 확인 후 구매 처리
-                    OutputView.printPromotionOutOfStock(buyProduct.getName(), leftStock);
-                    // 구매 로직 - 먼저 프로모션을 빼고, 일반 재고를 뺀다
-                    if (inputYesOrNo().equals("Y")) {
-                        storeService.buyProcessNotPromotion(buyProduct.getName());
-                    }
-                    continue;
-                }
+            if (isNowInPromotionDate(buyProduct) && storeService.checkPromotionProductStock(buyProduct.getName())) {
+                processGetPromotionProduct(buyProduct);
+                processGetNotPromotionProduct(buyProduct);
+                continue;
             }
             storeService.buyProcessNotPromotion(buyProduct.getName());
         }
@@ -86,6 +64,17 @@ public class StoreController {
         if (inputYesOrNo().equals("Y")) {
             storeService.buyPromotionForFree(buyProduct.getName(), promotionQuantity);
             storeService.getReceipt().addPromotionProductQuantity(buyProduct.getName(), promotionQuantity);
+        }
+    }
+
+    private void processGetNotPromotionProduct(BuyProduct buyProduct) {
+        Long allSameProductQuantity = storeService.calculateSameProductStockQuantity(buyProduct);
+        Long promotionIncludeProductQuantity = storeService.calculatePromotionOnlyProductQuantity(buyProduct);
+        Long leftStock = allSameProductQuantity - promotionIncludeProductQuantity;
+
+        OutputView.printPromotionOutOfStock(buyProduct.getName(), leftStock);
+        if (inputYesOrNo().equals("Y")) {
+            storeService.buyProcessNotPromotion(buyProduct.getName());
         }
     }
 
