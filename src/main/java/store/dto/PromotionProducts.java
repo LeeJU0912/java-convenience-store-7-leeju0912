@@ -14,11 +14,15 @@ public class PromotionProducts extends Products {
         if (getProductByName(productName) == null) {
             return false;
         }
+        if (checkPromotionDateTime(productName)) return false;
+        return true;
+    }
 
+    private boolean checkPromotionDateTime(String productName) {
         LocalDateTime now = DateTimes.now();
         Product promotionProduct = getProducts().get(productName);
-        if (promotionProduct.getPromotion().promoteStartDate().isBefore(now)
-                && promotionProduct.getPromotion().promoteEndDate().isAfter(now)) {
+        if (promotionProduct.getPromotion().promoteEndDate().isBefore(now)
+                || promotionProduct.getPromotion().promoteStartDate().isAfter(now)) {
             return true;
         }
         return false;
