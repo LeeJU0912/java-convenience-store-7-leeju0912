@@ -5,7 +5,7 @@ public class Product {
     private final String name;
     private final Long price;
     private Long stock;
-    private String promotionName;
+    private final String promotionName;
 
     private Promotion promotion;
 
