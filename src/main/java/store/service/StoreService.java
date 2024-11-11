@@ -227,12 +227,11 @@ public class StoreService {
         Long nowQuantity = buyProduct.getQuantity();
 
         Product product = getProducts().getProductByName(productName);
-        Long productStock = product.getStock();
-        buyAndReduceStockFromProduct(productStock, product, nowQuantity);
+        buyAndReduceStockFromProduct(product, nowQuantity);
     }
 
-    private void buyAndReduceStockFromProduct(Long productStock, Product product, Long nowQuantity) {
-        reduceProductQuantity(productStock, product);
+    private void buyAndReduceStockFromProduct(Product product, Long nowQuantity) {
+        reduceProductQuantity(nowQuantity, product);
         addReceiptBuyProductQuantity(nowQuantity, product);
         reduceBuyProductQuantity(nowQuantity, product);
     }
