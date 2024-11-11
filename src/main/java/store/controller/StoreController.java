@@ -94,7 +94,9 @@ public class StoreController {
         Product productInfoToBuy = storeService.getPromotionProducts().getProductByName(buyProduct.getName());
 
         // 프로모션이 적용되는 사는 물량 전체 총합
-        Long promotionOnlyBuyQuantity = promotionOnlyQuantity * promoteNeedQuantity;
+        Long promotionOnlyBuyQuantity = promotionOnlyQuantity * (promoteNeedQuantity + promotePlusQuantity);
+
+        Long notPromotedToBuyProduct = toBuyProductQuantity - promotionOnlyBuyQuantity;
 
 
         // 추가 물건을 넣을 수 있다면, 넣는다.
@@ -107,17 +109,20 @@ public class StoreController {
                 if (inputYesOrNo().equals("Y")) {
                     // 정가로 일단 전부 결제
                     storeService.getReceipt().addBuyProductQuantity(productInfoToBuy, toBuyProductQuantity);
-                    // 영수증 promotion 할인 기재
-                    storeService.getReceipt().addPromotionProductQuantity(productInfoToBuy, promotionOnlyQuantity);
-                    // 재고 감소
-                    storeService.getPromotionProducts().reducePromotionQuantity(buyProduct.getName(), toBuyProductQuantity);
-                    storeService.getBuyProducts().buyProducts().get(buyProduct.getName()).reduceQuantity(toBuyProductQuantity);
+                    if (promotionOnlyQuantity >= 1) {
+                        // 영수증 promotion 할인 기재
+                        storeService.getReceipt().addPromotionProductQuantity(productInfoToBuy, promotionOnlyQuantity);
+                        // 재고 감소
+                        storeService.getPromotionProducts().reducePromotionQuantity(buyProduct.getName(), toBuyProductQuantity);
+                        storeService.getBuyProducts().buyProducts().get(buyProduct.getName()).reduceQuantity(toBuyProductQuantity);
+                    }
+
 
 
                     // 구매 하나 더 추가
                     storeService.getReceipt().addBuyProductQuantity(productInfoToBuy, promotePlusQuantity);
-//                    // 영수증 promotion 할인 갯수 +1
-//                    storeService.getReceipt().addPromotionProductQuantity(productInfoToBuy, promotePlusQuantity);
+                    // 영수증 promotion 할인 갯수 +1
+                    storeService.getReceipt().addPromotionProductQuantity(productInfoToBuy, promotePlusQuantity);
                     // 재고 감소 -1
                     storeService.getPromotionProducts().reducePromotionQuantity(buyProduct.getName(), promotePlusQuantity);
                     storeService.getBuyProducts().buyProducts().get(buyProduct.getName()).reduceQuantity(promotePlusQuantity);
@@ -189,7 +194,7 @@ public class StoreController {
         if (promotionQuantity < toBuyProductQuantity) {
             Long leftStock = storeService.calculateSameProductStockQuantity(buyProduct);
 
-            OutputView.printPromotionOutOfStock(buyProduct.getName(), promotionOnlyBuyQuantity);
+            OutputView.printPromotionOutOfStock(buyProduct.getName(), notPromotedToBuyProduct);
             if (inputYesOrNo().equals("Y")) {
                 // 정가로 일단 전부 결제
                 storeService.getReceipt().addBuyProductQuantity(productInfoToBuy, promotionOnlyBuyQuantity);
