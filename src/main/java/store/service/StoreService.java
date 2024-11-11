@@ -176,7 +176,7 @@ public class StoreService {
     }
 
     public Long calculateSameProductStockQuantity(BuyProduct buyProduct) {
-        return getProducts().getProductQuantity(buyProduct.getName());
+        return getProducts().getProductQuantity(buyProduct.getName()) + getPromotionProducts().getProductQuantity(buyProduct.getName());
     }
 
     public Long calculatePromotionOnlyProductQuantity(BuyProduct buyProduct) {
@@ -208,7 +208,7 @@ public class StoreService {
         buyAndReduceStockFromPromotionProduct(nowQuantity, nowPromotionProductStock, promotionProduct);
     }
 
-    private void buyAndReduceStockFromPromotionProduct(Long nowQuantity, Long nowPromotionProductStock, Product promotionProduct) {
+    public void buyAndReduceStockFromPromotionProduct(Long nowQuantity, Long nowPromotionProductStock, Product promotionProduct) {
         if (nowQuantity <= nowPromotionProductStock) {
             buyAndReduceFromPromotionProductWithQuantity(nowQuantity, promotionProduct);
             return;
