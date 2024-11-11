@@ -170,6 +170,9 @@ public class StoreService {
     }
 
     private static String[] splitBuyProductInfo(String buyProductInfo) {
+        if (!(buyProductInfo.contains("[") && buyProductInfo.contains("]"))) {
+            throw new IllegalArgumentException(ValidatorMessage.WRONG_BUY_FORMAT.getErrorMessage());
+        }
         buyProductInfo = buyProductInfo.replaceAll("[\\[\\]]", "");
         return Arrays.stream(buyProductInfo.split("-")).filter(productInfo -> !productInfo.isEmpty()).toArray(String[]::new);
     }
