@@ -175,11 +175,15 @@ public class StoreService {
     }
 
     private static String[] splitBuyProductInfo(String buyProductInfo) {
+        checkBracket(buyProductInfo);
+        buyProductInfo = buyProductInfo.replaceAll("[\\[\\]]", "");
+        return Arrays.stream(buyProductInfo.split("-")).toArray(String[]::new);
+    }
+
+    private static void checkBracket(String buyProductInfo) {
         if (!(buyProductInfo.contains("[") && buyProductInfo.contains("]"))) {
             throw new IllegalArgumentException(ValidatorMessage.WRONG_BUY_FORMAT.getErrorMessage());
         }
-        buyProductInfo = buyProductInfo.replaceAll("[\\[\\]]", "");
-        return Arrays.stream(buyProductInfo.split("-")).toArray(String[]::new);
     }
 
     private String[] splitInput(String input) {
@@ -296,11 +300,15 @@ public class StoreService {
     private static Long checkConvertBuyProductQuantity(String[] splitBuyProductInfo) {
         try {
             long productQuantity = Long.parseLong(splitBuyProductInfo[1]);
-            if (productQuantity < 0) {
-                throw new IllegalArgumentException(ValidatorMessage.WRONG_BUY_FORMAT.getErrorMessage());
-            }
+            checkQuantityMinusValue(productQuantity);
             return productQuantity;
         } catch (NumberFormatException e) {
+            throw new IllegalArgumentException(ValidatorMessage.WRONG_BUY_FORMAT.getErrorMessage());
+        }
+    }
+
+    private static void checkQuantityMinusValue(long productQuantity) {
+        if (productQuantity < 0) {
             throw new IllegalArgumentException(ValidatorMessage.WRONG_BUY_FORMAT.getErrorMessage());
         }
     }
@@ -326,7 +334,6 @@ public class StoreService {
         if (product != null) {
             productQuantity += product.getStock();
         }
-
         if (buyProductQuantity > productQuantity) {
             throw new IllegalArgumentException(ValidatorMessage.BUY_PRODUCT_OVER_STOCK.getErrorMessage());
         }
