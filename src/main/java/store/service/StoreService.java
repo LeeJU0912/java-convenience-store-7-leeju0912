@@ -96,6 +96,9 @@ public class StoreService {
 
     private Product parseProduct(String productData) {
         String[] productInfo = splitInput(productData);
+        if (productInfo.length != 4) {
+            throw new IllegalArgumentException(ValidatorMessage.WRONG_BUY_FORMAT.getErrorMessage());
+        }
         return new Product(productInfo[0], Long.parseLong(productInfo[1]), Long.parseLong(productInfo[2]), productInfo[3]);
     }
 
@@ -119,6 +122,10 @@ public class StoreService {
 
     private Promotion parsePromotion(String promotion) {
         String[] promotionInfo = splitInput(promotion);
+        if (promotionInfo.length != 5) {
+            System.out.println(ValidatorMessage.WRONG_BUY_FORMAT.getErrorMessage());
+            throw new IllegalArgumentException(ValidatorMessage.WRONG_BUY_FORMAT.getErrorMessage());
+        }
         LocalDateTime from = LocalDateTime.parse(promotionInfo[3] + "T00:00:00");
         LocalDateTime to = LocalDateTime.parse(promotionInfo[4] + "T23:59:59");
         return new Promotion(promotionInfo[0], Long.parseLong(promotionInfo[1]), Long.parseLong(promotionInfo[2]), from, to);
@@ -174,11 +181,11 @@ public class StoreService {
             throw new IllegalArgumentException(ValidatorMessage.WRONG_BUY_FORMAT.getErrorMessage());
         }
         buyProductInfo = buyProductInfo.replaceAll("[\\[\\]]", "");
-        return Arrays.stream(buyProductInfo.split("-")).filter(productInfo -> !productInfo.isEmpty()).toArray(String[]::new);
+        return Arrays.stream(buyProductInfo.split("-")).toArray(String[]::new);
     }
 
     private String[] splitInput(String input) {
-        return Arrays.stream(input.split(",")).filter(productInfo -> !productInfo.isEmpty()).toArray(String[]::new);
+        return input.split(",");
     }
 
     public Long calculateSameProductStockQuantity(BuyProduct buyProduct) {
