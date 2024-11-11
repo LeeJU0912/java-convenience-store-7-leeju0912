@@ -95,10 +95,14 @@ public class StoreService {
 
     private Product parseProduct(String productData) {
         String[] productInfo = splitInput(productData);
+        checkProductInfoLength(productInfo);
+        return new Product(productInfo[0], Long.parseLong(productInfo[1]), Long.parseLong(productInfo[2]), productInfo[3]);
+    }
+
+    private static void checkProductInfoLength(String[] productInfo) {
         if (productInfo.length != 4) {
             throw new IllegalArgumentException(ValidatorMessage.WRONG_BUY_FORMAT.getErrorMessage());
         }
-        return new Product(productInfo[0], Long.parseLong(productInfo[1]), Long.parseLong(productInfo[2]), productInfo[3]);
     }
 
     private void addPromotions() {
@@ -121,12 +125,16 @@ public class StoreService {
 
     private Promotion parsePromotion(String promotion) {
         String[] promotionInfo = splitInput(promotion);
-        if (promotionInfo.length != 5) {
-            throw new IllegalArgumentException(ValidatorMessage.WRONG_BUY_FORMAT.getErrorMessage());
-        }
+        checkPromotionInfoLength(promotionInfo);
         LocalDateTime from = LocalDateTime.parse(promotionInfo[3] + "T00:00:00");
         LocalDateTime to = LocalDateTime.parse(promotionInfo[4] + "T23:59:59");
         return new Promotion(promotionInfo[0], Long.parseLong(promotionInfo[1]), Long.parseLong(promotionInfo[2]), from, to);
+    }
+
+    private static void checkPromotionInfoLength(String[] promotionInfo) {
+        if (promotionInfo.length != 5) {
+            throw new IllegalArgumentException(ValidatorMessage.WRONG_BUY_FORMAT.getErrorMessage());
+        }
     }
 
     private void addPromotionsToProducts() {
