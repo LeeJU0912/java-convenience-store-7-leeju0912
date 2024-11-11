@@ -46,6 +46,14 @@ class ApplicationTest extends NsTest {
     }
 
     @Test
+    void 같은_물건_중복_구매() {
+        assertNowTest(() -> {
+            run("[사이다-2],[사이다-2]", "Y", "N", "N");
+            assertThat(output().replaceAll("\\s", "")).contains("내실돈1,800", "사이다4");
+        }, LocalDate.of(2024, 2, 1).atStartOfDay());
+    }
+
+    @Test
     void 기간에_해당하는_프로모션_적용_멤버십_할인() {
         assertNowTest(() -> {
             run("[사이다-2]", "Y", "Y", "N");
