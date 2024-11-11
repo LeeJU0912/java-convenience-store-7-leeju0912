@@ -7,7 +7,7 @@ import java.util.Arrays;
 public class FileValidator {
 
     public static void validateProductParsing(String fileDataProduct) {
-        String[] splitData = Arrays.stream(fileDataProduct.split(",")).filter(productInfo -> !productInfo.isEmpty()).toArray(String[]::new);
+        String[] splitData = Arrays.stream(fileDataProduct.split(",")).toArray(String[]::new);
         checkFileDataSize(splitData);
         checkFileDataLongConvert(splitData);
     }
@@ -19,7 +19,10 @@ public class FileValidator {
     }
 
     public static void validatePromotionParsing(String fileDataProduct) {
-        String[] splitData = Arrays.stream(fileDataProduct.split(",")).filter(productInfo -> !productInfo.isEmpty()).toArray(String[]::new);
+        String[] splitData = Arrays.stream(fileDataProduct.split(",")).toArray(String[]::new);
+        if (splitData.length != 5) {
+            throw new IllegalArgumentException(ValidatorMessage.FILE_WRONG_FORMAT.getErrorMessage());
+        }
         checkFileDataLongConvert(splitData);
 
         checkFileDataLocalDateTimeConvert(splitData);
@@ -27,8 +30,12 @@ public class FileValidator {
 
     private static void checkFileDataLongConvert(String[] splitData) {
         try {
-            Long.parseLong(splitData[1]);
-            Long.parseLong(splitData[2]);
+            Long buy = Long.parseLong(splitData[1]);
+            Long get = Long.parseLong(splitData[2]);
+
+            if (buy < 0 || get < 0) {
+                throw new IllegalArgumentException(ValidatorMessage.FILE_WRONG_FORMAT.getErrorMessage());
+            }
         } catch (NumberFormatException e) {
             throw new IllegalArgumentException(ValidatorMessage.FILE_WRONG_FORMAT.getErrorMessage());
         }
