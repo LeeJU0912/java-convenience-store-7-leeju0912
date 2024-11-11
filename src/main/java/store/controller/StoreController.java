@@ -137,13 +137,11 @@ public class StoreController {
                 // 정가로 일단 전부 결제
                 storeService.getReceipt().addBuyProductQuantity(productInfoToBuy, toBuyProductQuantity);
 
-                if (promotionOnlyQuantity > 1) {
-                    // 영수증 promotion 할인 기재
-                    storeService.getReceipt().addPromotionProductQuantity(productInfoToBuy, promotionOnlyQuantity - 1);
-                    // 재고 감소
-                    storeService.getPromotionProducts().reducePromotionQuantity(buyProduct.getName(), toBuyProductQuantity);
-                    storeService.getBuyProducts().buyProducts().get(buyProduct.getName()).reduceQuantity(toBuyProductQuantity);
-                }
+                // 영수증 promotion 할인 기재
+                storeService.getReceipt().addPromotionProductQuantity(productInfoToBuy, promotionOnlyQuantity);
+                // 재고 감소
+                storeService.getPromotionProducts().reducePromotionQuantity(buyProduct.getName(), toBuyProductQuantity);
+                storeService.getBuyProducts().buyProducts().get(buyProduct.getName()).reduceQuantity(toBuyProductQuantity);
 
                 return;
             }
