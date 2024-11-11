@@ -10,12 +10,12 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 public class Receipt {
-    private final BuyProducts buyProducts;
+    private final BuyProducts boughtProducts;
     private final PromotionProducts promotionProducts;
     private boolean membershipDiscount;
 
     public Receipt() {
-        this.buyProducts = new BuyProducts(new ConcurrentHashMap<>());
+        this.boughtProducts = new BuyProducts(new ConcurrentHashMap<>());
         this.promotionProducts = new PromotionProducts();
         this.membershipDiscount = false;
     }
@@ -25,11 +25,11 @@ public class Receipt {
     }
 
     public void addBuyProduct(Product product) {
-        buyProducts.buyProducts().put(product.getName(), new BuyProduct(product.getName(), 0L, product.getPrice()));
+        boughtProducts.buyProducts().put(product.getName(), new BuyProduct(product.getName(), 0L, product.getPrice()));
     }
 
-    public BuyProducts getBuyProducts() {
-        return buyProducts;
+    public BuyProducts getBoughtProducts() {
+        return boughtProducts;
     }
 
     public PromotionProducts getPromotionProducts() {
@@ -37,7 +37,7 @@ public class Receipt {
     }
 
     public void addBuyProductQuantity(Product product, Long quantity) {
-        Map<String, BuyProduct> buyProducts = getBuyProducts().buyProducts();
+        Map<String, BuyProduct> buyProducts = getBoughtProducts().buyProducts();
         if (!buyProducts.containsKey(product.getName())) {
             addBuyProduct(product);
         }
@@ -45,15 +45,16 @@ public class Receipt {
     }
 
     public void addPromotionProductQuantity(Product product, Long quantity) {
-        promotionProducts.addPromotionQuantity(product, quantity);
+        getPromotionProducts().getProducts().putIfAbsent(product.getName(), new Product(product.getName(), product.getPrice(), 0L, product.getPromotionName()));
+        getPromotionProducts().getProducts().get(product.getName()).updateStock(quantity);
     }
 
     public Long calculateTotalQuantity() {
-        return buyProducts.buyProducts().values().stream().mapToLong(BuyProduct::getQuantity).sum();
+        return boughtProducts.buyProducts().values().stream().mapToLong(BuyProduct::getQuantity).sum();
     }
 
     public Long calculateTotal() {
-        return buyProducts.buyProducts().values().stream().mapToLong(BuyProduct::calculatePriceSum).sum();
+        return boughtProducts.buyProducts().values().stream().mapToLong(BuyProduct::calculatePriceSum).sum();
     }
 
     public Long calculatePromotionTotal() {
