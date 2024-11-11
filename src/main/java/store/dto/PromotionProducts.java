@@ -6,8 +6,6 @@ import store.domain.Product;
 
 import java.time.LocalDateTime;
 
-import static java.lang.Math.min;
-
 public class PromotionProducts extends Products {
 
     public boolean nowInPromotionDate(String productName) {
@@ -38,9 +36,10 @@ public class PromotionProducts extends Products {
 
     public Long getPromotionOnlyProductQuantity(BuyProduct buyProduct) {
         Product product = getProducts().get(buyProduct.getName());
-        return min(product.getStock(), buyProduct.getQuantity()) / (product.getPromotion().promoteQuantity() + product.getPromotion().promotePlus());
+        double result = (double) Math.min(product.getStock(), buyProduct.getQuantity())
+                / (product.getPromotion().promoteQuantity() + product.getPromotion().promotePlus());
+        return Math.round(result);
     }
-
 
     public void reducePromotionQuantity(String productName, Long quantity) {
         getProducts().get(productName).reduceStock(quantity);
