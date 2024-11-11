@@ -308,7 +308,7 @@ public class StoreService {
     }
 
     private static void checkQuantityMinusValue(long productQuantity) {
-        if (productQuantity < 0) {
+        if (productQuantity <= 0) {
             throw new IllegalArgumentException(ValidatorMessage.WRONG_BUY_FORMAT.getErrorMessage());
         }
     }
