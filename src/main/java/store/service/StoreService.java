@@ -159,11 +159,11 @@ public class StoreService {
     }
 
     private Long getProductPrice(String buyProductName) {
-        Long productPrice = getProducts().getProductPrice(buyProductName);
-        if (productPrice == null) {
-            productPrice = getPromotionProducts().getProductPrice(buyProductName);
+        Product product = getPromotionProducts().getProductByName(buyProductName);
+        if (product == null) {
+            product = getProducts().getProductByName(buyProductName);
         }
-        return productPrice;
+        return product.getPrice();
     }
 
     private static String[] splitBuyProductInfo(String buyProductInfo) {
@@ -298,11 +298,17 @@ public class StoreService {
     }
 
     private void checkBuyProductQuantityOverStock(String buyProductName, Long buyProductQuantity) {
-        Product product = getPromotionProducts().getProducts().get(buyProductName);
-        if (product == null) {
-            product = getProducts().getProducts().get(buyProductName);
+        Product promotionProduct = getPromotionProducts().getProducts().get(buyProductName);
+        Product product = getProducts().getProducts().get(buyProductName);
+
+        Long productQuantity = 0L;
+
+        if (promotionProduct != null) {
+            productQuantity += promotionProduct.getStock();
         }
-        Long productQuantity = product.getStock();
+        if (product != null) {
+            productQuantity += product.getStock();
+        }
 
         if (buyProductQuantity > productQuantity) {
             throw new IllegalArgumentException(ValidatorMessage.BUY_PRODUCT_OVER_STOCK.getErrorMessage());
