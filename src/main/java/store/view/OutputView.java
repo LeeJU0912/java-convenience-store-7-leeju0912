@@ -65,7 +65,7 @@ public class OutputView {
 
     private static String filterReceiptZero(Long quantity) {
         if (quantity == 0L) {
-            return "0";
+            return "-0";
         }
         return "-" + formatter.format(quantity);
     }
