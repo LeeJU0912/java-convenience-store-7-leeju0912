@@ -185,7 +185,7 @@ public class StoreService {
 
     public boolean checkPromotionProductStock(String productName) {
         Long promotionProductStockQuantity = getPromotionProducts().getPromotionProductStockQuantity(productName);
-        if (promotionProductStockQuantity < getPromotionProducts().getPromotionValidQuantity(productName)) {
+        if (promotionProductStockQuantity <= getPromotionProducts().getPromotionValidQuantity(productName)) {
             return false;
         }
         return true;
