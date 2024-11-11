@@ -104,6 +104,16 @@ class ApplicationTest extends NsTest {
     }
 
     @Test
+    void 프로모션_끼워주기_알림_구매2() {
+        assertSimpleTest(() -> {
+            run("[오렌지주스-1],[콜라-2]", "Y", "Y", "N", "N");
+            assertThat(output()).contains("현재 오렌지주스은(는) 1개를 무료로 더 받을 수 있습니다. 추가하시겠습니까? (Y/N)");
+            assertThat(output()).contains("현재 콜라은(는) 1개를 무료로 더 받을 수 있습니다. 추가하시겠습니까? (Y/N)");
+            assertThat(output().replaceAll("\\s", "")).contains("내실돈3,800");
+        });
+    }
+
+    @Test
     void 여러번_프로모션_상품_구매2() {
         assertSimpleTest(() -> {
             run("[콜라-3]", "N", "Y", "[콜라-4]", "Y", "N");
