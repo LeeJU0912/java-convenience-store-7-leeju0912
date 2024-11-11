@@ -279,6 +279,9 @@ public class StoreService {
         String[] buyProductsInfo = splitInput(input);
 
         for (String buyProductInfo : buyProductsInfo) {
+            if (buyProductInfo.isEmpty()) {
+                throw new IllegalArgumentException(ValidatorMessage.WRONG_BUY_FORMAT.getErrorMessage());
+            }
             String[] splitBuyProductInfo = splitBuyProductInfo(buyProductInfo);
             checkBuyProductInfoSize(splitBuyProductInfo);
             Long buyProductQuantity = checkConvertBuyProductQuantity(splitBuyProductInfo);
