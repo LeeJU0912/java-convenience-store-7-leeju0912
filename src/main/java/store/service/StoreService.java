@@ -16,7 +16,6 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.Arrays;
-import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class StoreService {
@@ -123,7 +122,6 @@ public class StoreService {
     private Promotion parsePromotion(String promotion) {
         String[] promotionInfo = splitInput(promotion);
         if (promotionInfo.length != 5) {
-            System.out.println(ValidatorMessage.WRONG_BUY_FORMAT.getErrorMessage());
             throw new IllegalArgumentException(ValidatorMessage.WRONG_BUY_FORMAT.getErrorMessage());
         }
         LocalDateTime from = LocalDateTime.parse(promotionInfo[3] + "T00:00:00");
@@ -186,10 +184,6 @@ public class StoreService {
 
     private String[] splitInput(String input) {
         return input.split(",");
-    }
-
-    public Long calculateSameProductStockQuantity(BuyProduct buyProduct) {
-        return getProducts().getProductQuantity(buyProduct.getName()) + getPromotionProducts().getProductQuantity(buyProduct.getName());
     }
 
     public Long calculatePromotionOnlyProductQuantity(BuyProduct buyProduct) {
@@ -269,24 +263,27 @@ public class StoreService {
         getReceipt().setMembershipDiscount();
     }
 
-    public void buyPromotionForFree(Product productName, Long promotionQuantity) {
-        getPromotionProducts().reducePromotionQuantity(productName.getName(), promotionQuantity);
-        getReceipt().addBuyProductQuantity(productName, promotionQuantity);
-    }
-
-
     public void validateInputBuyProducts(String input) {
-        String[] buyProductsInfo = splitInput(input);
-
-        for (String buyProductInfo : buyProductsInfo) {
-            if (buyProductInfo.isEmpty()) {
-                throw new IllegalArgumentException(ValidatorMessage.WRONG_BUY_FORMAT.getErrorMessage());
-            }
+        checkContainsBlank(input);
+        for (String buyProductInfo : splitInput(input)) {
+            checkEmptyString(buyProductInfo);
             String[] splitBuyProductInfo = splitBuyProductInfo(buyProductInfo);
             checkBuyProductInfoSize(splitBuyProductInfo);
             Long buyProductQuantity = checkConvertBuyProductQuantity(splitBuyProductInfo);
             String buyProductName = checkValidBuyProductName(splitBuyProductInfo);
             checkBuyProductQuantityOverStock(buyProductName, buyProductQuantity);
+        }
+    }
+
+    private static void checkEmptyString(String buyProductInfo) {
+        if (buyProductInfo.isEmpty()) {
+            throw new IllegalArgumentException(ValidatorMessage.WRONG_BUY_FORMAT.getErrorMessage());
+        }
+    }
+
+    private static void checkContainsBlank(String input) {
+        if (input.contains(" ")) {
+            throw new IllegalArgumentException(ValidatorMessage.WRONG_BUY_FORMAT.getErrorMessage());
         }
     }
 
@@ -298,7 +295,11 @@ public class StoreService {
 
     private static Long checkConvertBuyProductQuantity(String[] splitBuyProductInfo) {
         try {
-            return Long.parseLong(splitBuyProductInfo[1]);
+            long productQuantity = Long.parseLong(splitBuyProductInfo[1]);
+            if (productQuantity < 0) {
+                throw new IllegalArgumentException(ValidatorMessage.WRONG_BUY_FORMAT.getErrorMessage());
+            }
+            return productQuantity;
         } catch (NumberFormatException e) {
             throw new IllegalArgumentException(ValidatorMessage.WRONG_BUY_FORMAT.getErrorMessage());
         }
@@ -337,8 +338,19 @@ public class StoreService {
         }
     }
 
-    public void addReceiptPromotionProductQuantity(String productName, Long promotionQuantity) {
-        Product product = getPromotionProducts().getProductByName(productName);
-        getReceipt().addPromotionProductQuantity(product, promotionQuantity);
+    public Long getPromotionProductQuantity(String productName) {
+        return getPromotionProducts().getPromotionProductStockQuantity(productName);
+    }
+
+    public Long getPromoteNeedQuantity(String productName) {
+        return getPromotionProducts().getProductByName(productName).getPromotion().promoteQuantity();
+    }
+
+    public Long getPromotePlusQuantity(String productName) {
+        return getPromotionProducts().getProductByName(productName).getPromotion().promotePlus();
+    }
+
+    public Product getPromoteProductDetail(String productName) {
+        return getPromotionProducts().getProductByName(productName);
     }
 }
