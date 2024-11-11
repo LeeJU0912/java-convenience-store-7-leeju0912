@@ -92,69 +92,30 @@ public class StoreController {
                         storeService.getPromotionProducts().reducePromotionQuantity(buyProduct.getName(), toBuyProductQuantity);
                         storeService.getBuyProducts().buyProducts().get(buyProduct.getName()).reduceQuantity(toBuyProductQuantity);
                     }
-
                     // 구매 하나 더 추가
-                    storeService.getReceipt().addBuyProductQuantity(productInfoToBuy, promotePlusQuantity);
-                    // 영수증 promotion 할인 갯수 +1
-                    storeService.getReceipt().addPromotionProductQuantity(productInfoToBuy, promotePlusQuantity);
-                    // 재고 감소 -1
-                    storeService.getPromotionProducts().reducePromotionQuantity(buyProduct.getName(), promotePlusQuantity);
-                    storeService.getBuyProducts().buyProducts().get(buyProduct.getName()).reduceQuantity(promotePlusQuantity);
+                    calculateProcess2(buyProduct, productInfoToBuy, promotePlusQuantity, promotePlusQuantity);
                     return;
                 }
-
                 // 1개 추가 하지 않는 케이스
-                // 정가로 일단 전부 결제
-                storeService.getReceipt().addBuyProductQuantity(productInfoToBuy, toBuyProductQuantity);
-                // 영수증 promotion 할인 기재
-                storeService.getReceipt().addPromotionProductQuantity(productInfoToBuy, promotionOnlyQuantity);
-                // 재고 감소
-                storeService.getPromotionProducts().reducePromotionQuantity(buyProduct.getName(), toBuyProductQuantity);
-                storeService.getBuyProducts().buyProducts().get(buyProduct.getName()).reduceQuantity(toBuyProductQuantity);
+                calculateProcess2(buyProduct, productInfoToBuy, toBuyProductQuantity, promotionOnlyQuantity);
                 return;
             }
-
             // 만약 1을 더 못 주는 경우,
-            // 2+1 :: 7 / 3 = 2 * 3 = 6 -> 1개가 더 들어갔다. 1개를 더 사야 보너스를 주기 때문에 불가능
-            // 정가로 일단 전부 결제
-            storeService.getReceipt().addBuyProductQuantity(productInfoToBuy, promotionOnlyBuyQuantity);
-
-            // 영수증 promotion 할인 기재
-            storeService.getReceipt().addPromotionProductQuantity(productInfoToBuy, promotionOnlyQuantity);
-            // 재고 감소
-            storeService.getPromotionProducts().reducePromotionQuantity(buyProduct.getName(), promotionOnlyBuyQuantity);
-            storeService.getBuyProducts().buyProducts().get(buyProduct.getName()).reduceQuantity(promotionOnlyBuyQuantity);
-
-            // 나머지 재고 털이
-            storeService.buyProcessNotPromotion(buyProduct.getName());
-
+            calculateProcess(buyProduct, productInfoToBuy, promotionOnlyBuyQuantity, promotionOnlyQuantity);
             return;
         }
 
         // 물어보지 않고 프로모션 할인 로직 진행
         if (promotionQuantity == toBuyProductQuantity) {
             if (toBuyProductQuantity % (promoteNeedQuantity + promotePlusQuantity) == 0) {
-                // 정가로 일단 전부 결제
-                storeService.getReceipt().addBuyProductQuantity(productInfoToBuy, toBuyProductQuantity);
-                // 영수증 promotion 할인 기재
-                storeService.getReceipt().addPromotionProductQuantity(productInfoToBuy, promotionOnlyQuantity);
-                // 재고 감소
-                storeService.getPromotionProducts().reducePromotionQuantity(buyProduct.getName(), toBuyProductQuantity);
-                storeService.getBuyProducts().buyProducts().get(buyProduct.getName()).reduceQuantity(toBuyProductQuantity);
+                calculateProcess2(buyProduct, productInfoToBuy, toBuyProductQuantity, promotionOnlyQuantity);
                 return;
             }
 
             OutputView.printPromotionOutOfStock(buyProduct.getName(), notPromotedToBuyProduct);
             if (inputYesOrNo().equals("Y")) {
                 // 정가로 일단 전부 결제
-                storeService.getReceipt().addBuyProductQuantity(productInfoToBuy, promotionOnlyBuyQuantity);
-                // 영수증 promotion 할인 기재
-                storeService.getReceipt().addPromotionProductQuantity(productInfoToBuy, promotionOnlyQuantity);
-                // 재고 감소
-                storeService.getPromotionProducts().reducePromotionQuantity(buyProduct.getName(), promotionOnlyBuyQuantity);
-                storeService.getBuyProducts().buyProducts().get(buyProduct.getName()).reduceQuantity(promotionOnlyBuyQuantity);
-                // 나머지 재고 털이
-                storeService.buyProcessNotPromotion(buyProduct.getName());
+                calculateProcess(buyProduct, productInfoToBuy, promotionOnlyBuyQuantity, promotionOnlyQuantity);
             }
             return;
         }
@@ -163,17 +124,26 @@ public class StoreController {
         if (promotionQuantity < toBuyProductQuantity) {
             OutputView.printPromotionOutOfStock(buyProduct.getName(), notPromotedToBuyProduct);
             if (inputYesOrNo().equals("Y")) {
-                // 정가로 일단 전부 결제
-                storeService.getReceipt().addBuyProductQuantity(productInfoToBuy, promotionOnlyBuyQuantity);
-                // 영수증 promotion 할인 기재
-                storeService.getReceipt().addPromotionProductQuantity(productInfoToBuy, promotionOnlyQuantity);
-                // 재고 감소
-                storeService.getPromotionProducts().reducePromotionQuantity(buyProduct.getName(), promotionOnlyBuyQuantity);
-                storeService.getBuyProducts().buyProducts().get(buyProduct.getName()).reduceQuantity(promotionOnlyBuyQuantity);
-                // 나머지 재고 털이
-                storeService.buyProcessNotPromotion(buyProduct.getName());
+                calculateProcess(buyProduct, productInfoToBuy, promotionOnlyBuyQuantity, promotionOnlyQuantity);
             }
         }
+    }
+
+    private void calculateProcess(BuyProduct buyProduct, Product productInfoToBuy, Long promotionOnlyBuyQuantity, Long promotionOnlyQuantity) {
+        // 정가로 일단 전부 결제
+        calculateProcess2(buyProduct, productInfoToBuy, promotionOnlyBuyQuantity, promotionOnlyQuantity);
+        // 나머지 재고 털이
+        storeService.buyProcessNotPromotion(buyProduct.getName());
+    }
+
+    private void calculateProcess2(BuyProduct buyProduct, Product productInfoToBuy, Long toBuyProductQuantity, Long promotionOnlyQuantity) {
+        // 정가로 일단 전부 결제
+        storeService.getReceipt().addBuyProductQuantity(productInfoToBuy, toBuyProductQuantity);
+        // 영수증 promotion 할인 기재
+        storeService.getReceipt().addPromotionProductQuantity(productInfoToBuy, promotionOnlyQuantity);
+        // 재고 감소
+        storeService.getPromotionProducts().reducePromotionQuantity(buyProduct.getName(), toBuyProductQuantity);
+        storeService.getBuyProducts().buyProducts().get(buyProduct.getName()).reduceQuantity(toBuyProductQuantity);
     }
 
     private static boolean canAddExtraQuantity(Long toBuyProductQuantity, Long promoteNeedQuantity, Long promotePlusQuantity) {
