@@ -40,7 +40,7 @@ class ApplicationTest extends NsTest {
     @Test
     void 기간에_해당하는_프로모션_적용() {
         assertNowTest(() -> {
-            run("[사이다-2]", "Y", "Y", "N", "N");
+            run("[사이다-2]", "Y", "N", "N");
             assertThat(output().replaceAll("\\s", "")).contains("내실돈2,000", "사이다3");
         }, LocalDate.of(2024, 2, 1).atStartOfDay());
     }
@@ -48,7 +48,7 @@ class ApplicationTest extends NsTest {
     @Test
     void 기간에_해당하는_프로모션_적용_멤버십_할인() {
         assertNowTest(() -> {
-            run("[사이다-2]", "Y", "Y", "Y", "N");
+            run("[사이다-2]", "Y", "Y", "N");
             assertThat(output().replaceAll("\\s", "")).contains("내실돈1,100", "사이다1");
         }, LocalDate.of(2024, 2, 1).atStartOfDay());
     }
