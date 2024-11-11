@@ -120,6 +120,14 @@ class ApplicationTest extends NsTest {
     }
 
     @Test
+    void 여러번_프로모션_상품_구매5() {
+        assertSimpleTest(() -> {
+            runException("[콜라-2]", "Y", "N", "Y", "[콜라--2]", "N", "Y", "N");
+            assertThat(output()).contains("[ERROR] 올바르지 않은 형식으로 입력했습니다. 다시 입력해 주세요.");
+        });
+    }
+
+    @Test
     void 기간에_해당하지_않는_프로모션_적용() {
         assertNowTest(() -> {
             run("[감자칩-2]", "N", "N");
