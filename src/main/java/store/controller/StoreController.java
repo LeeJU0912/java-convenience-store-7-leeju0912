@@ -77,50 +77,38 @@ public class StoreController {
         Long notPromotedToBuyProduct = toBuyProductQuantity - promotionOnlyBuyQuantity;
 
 
-        // 추가 물건을 넣을 수 있다면, 넣는다.
         if (canPickExtraQuantity(promotionQuantity, toBuyProductQuantity)) {
-            // 만약 초과해서 샀는데, 딱 +1만 부족해서 더 줄 수 있다면? 알림을 준다.
             if (canAddExtraQuantity(toBuyProductQuantity, promoteNeedQuantity, promotePlusQuantity)) {
                 OutputView.printGetMoreProductsForPromotion(buyProduct.getName(), promotePlusQuantity);
                 if (inputYesOrNo().equals("Y")) {
-                    // 정가로 일단 전부 결제
                     storeService.getReceipt().addBuyProductQuantity(productInfoToBuy, toBuyProductQuantity);
                     if (promotionOnlyQuantity >= 1) {
-                        // 영수증 promotion 할인 기재
                         storeService.getReceipt().addPromotionProductQuantity(productInfoToBuy, promotionOnlyQuantity);
-                        // 재고 감소
                         storeService.getPromotionProducts().reducePromotionQuantity(buyProduct.getName(), toBuyProductQuantity);
                         storeService.getBuyProducts().buyProducts().get(buyProduct.getName()).reduceQuantity(toBuyProductQuantity);
                     }
-                    // 구매 하나 더 추가
                     calculateProcess2(buyProduct, productInfoToBuy, promotePlusQuantity, promotePlusQuantity);
                     return;
                 }
-                // 1개 추가 하지 않는 케이스
                 calculateProcess2(buyProduct, productInfoToBuy, toBuyProductQuantity, promotionOnlyQuantity);
                 return;
             }
-            // 만약 1을 더 못 주는 경우,
             calculateProcess(buyProduct, productInfoToBuy, promotionOnlyBuyQuantity, promotionOnlyQuantity);
             return;
         }
 
-        // 물어보지 않고 프로모션 할인 로직 진행
         if (promotionQuantity == toBuyProductQuantity) {
             if (toBuyProductQuantity % (promoteNeedQuantity + promotePlusQuantity) == 0) {
                 calculateProcess2(buyProduct, productInfoToBuy, toBuyProductQuantity, promotionOnlyQuantity);
                 return;
             }
-
             OutputView.printPromotionOutOfStock(buyProduct.getName(), notPromotedToBuyProduct);
             if (inputYesOrNo().equals("Y")) {
-                // 정가로 일단 전부 결제
                 calculateProcess(buyProduct, productInfoToBuy, promotionOnlyBuyQuantity, promotionOnlyQuantity);
             }
             return;
         }
 
-        // 프로모션 적용 불가 메시지 출력
         if (promotionQuantity < toBuyProductQuantity) {
             OutputView.printPromotionOutOfStock(buyProduct.getName(), notPromotedToBuyProduct);
             if (inputYesOrNo().equals("Y")) {
