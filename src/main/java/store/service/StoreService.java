@@ -134,21 +134,24 @@ public class StoreService {
     }
 
     public void setBuyProducts(String input) {
-        buyProducts = parseBuyProducts(input);
+        buyProducts = new BuyProducts(new ConcurrentHashMap<>());
+        parseBuyProducts(input);
     }
 
-    private BuyProducts parseBuyProducts(String input) {
+    private void parseBuyProducts(String input) {
         String[] buyProductsInfo = splitInput(input);
-        return new BuyProducts(convertToBuyProducts(buyProductsInfo));
+        convertToBuyProducts(buyProductsInfo);
     }
 
-    private Map<String, BuyProduct> convertToBuyProducts(String[] buyProductsInfo) {
-        Map<String, BuyProduct> parsedBuyProducts = new ConcurrentHashMap<>();
+    private void convertToBuyProducts(String[] buyProductsInfo) {
         for (String buyProductInfo : buyProductsInfo) {
             String[] splitBuyProductInfo = splitBuyProductInfo(buyProductInfo);
-            parsedBuyProducts.put(splitBuyProductInfo[0], convertToBuyProduct(splitBuyProductInfo));
+            if (getBuyProducts().buyProducts().containsKey(splitBuyProductInfo[0])) {
+                getBuyProducts().buyProducts().get(splitBuyProductInfo[0]).addQuantity(Long.parseLong(splitBuyProductInfo[1]));
+                continue;
+            }
+            getBuyProducts().buyProducts().put(splitBuyProductInfo[0], convertToBuyProduct(splitBuyProductInfo));
         }
-        return parsedBuyProducts;
     }
 
     private BuyProduct convertToBuyProduct(String[] splitBuyProductInfo) {
