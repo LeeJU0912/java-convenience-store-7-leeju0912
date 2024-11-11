@@ -20,10 +20,6 @@ public class Products {
         return getProducts().get(productName);
     }
 
-    public Long getProductPrice(String productName) {
-        return getProducts().get(productName).getPrice();
-    }
-
     public Long getProductQuantity(String productName) {
         return getProducts().get(productName).getStock();
     }
