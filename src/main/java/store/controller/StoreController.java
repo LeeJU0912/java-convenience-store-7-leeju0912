@@ -3,6 +3,7 @@ package store.controller;
 import store.domain.BuyProduct;
 import store.domain.Product;
 import store.service.StoreService;
+import store.validator.ValidatorMessage;
 import store.view.InputView;
 import store.view.OutputView;
 
@@ -235,6 +236,9 @@ public class StoreController {
         while(true) {
             try {
                 String response = InputView.inputBuyProducts();
+                if (response.contains(" ")) {
+                    throw new IllegalArgumentException(ValidatorMessage.WRONG_BUY_FORMAT.getErrorMessage());
+                }
                 storeService.validateInputBuyProducts(response);
                 return response;
             } catch (IllegalArgumentException e) {
