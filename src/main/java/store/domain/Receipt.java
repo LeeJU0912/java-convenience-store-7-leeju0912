@@ -45,6 +45,9 @@ public class Receipt {
     }
 
     public void addPromotionProductQuantity(Product product, Long quantity) {
+        if (quantity <= 0) {
+            return;
+        }
         getPromotionProducts().getProducts().putIfAbsent(product.getName(), new Product(product.getName(), product.getPrice(), 0L, product.getPromotionName()));
         getPromotionProducts().getProducts().get(product.getName()).updateStock(quantity);
     }
