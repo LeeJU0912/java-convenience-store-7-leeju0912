@@ -151,6 +151,30 @@ class ApplicationTest extends NsTest {
         });
     }
 
+    @Test
+    void 예외_테스트_파싱_오류3() {
+        assertSimpleTest(() -> {
+            runException("[컵라면-12", "N", "N");
+            assertThat(output()).contains("[ERROR] 올바르지 않은 형식으로 입력했습니다. 다시 입력해 주세요.");
+        });
+    }
+
+    @Test
+    void 예외_테스트_파싱_오류4() {
+        assertSimpleTest(() -> {
+            runException("[비타민워터-3],물-2,[정식도시락-2]", "N", "N");
+            assertThat(output()).contains("[ERROR] 올바르지 않은 형식으로 입력했습니다. 다시 입력해 주세요.");
+        });
+    }
+
+    @Test
+    void 예외_테스트_여러_개의_일반_상품_구매_띄어쓰기() {
+        assertSimpleTest(() -> {
+            runException("[비타민워터-3], [물-2], [정식도시락-2]", "N", "N");
+            assertThat(output()).contains("[ERROR] 올바르지 않은 형식으로 입력했습니다. 다시 입력해 주세요.");
+        });
+    }
+
     @Override
     public void runMain() {
         Application.main(new String[]{});
