@@ -46,6 +46,14 @@ class ApplicationTest extends NsTest {
     }
 
     @Test
+    void 기간에_해당하는_프로모션_적용2() {
+        assertNowTest(() -> {
+            run("[사이다-1]", "N", "N");
+            assertThat(output().replaceAll("\\s", "")).contains("내실돈1,000", "사이다1");
+        }, LocalDate.of(2024, 2, 1).atStartOfDay());
+    }
+
+    @Test
     void 같은_물건_중복_구매() {
         assertNowTest(() -> {
             run("[사이다-2],[사이다-2]", "Y", "N", "N");
@@ -120,7 +128,15 @@ class ApplicationTest extends NsTest {
     }
 
     @Test
-    void 여러번_프로모션_상품_구매5() {
+    void 프로모션_음수_표기() {
+        assertSimpleTest(() -> {
+            run("[콜라-2]", "Y", "N", "Y", "[콜라-2]", "N", "Y", "N");
+            assertThat(output().replaceAll("\\s", "")).contains("멤버십할인-0", "멤버십할인-600");
+        });
+    }
+
+    @Test
+    void 여러번_프로모션_상품_구매6() {
         assertSimpleTest(() -> {
             runException("[콜라-2]", "Y", "N", "Y", "[콜라--2]", "N", "Y", "N");
             assertThat(output()).contains("[ERROR] 올바르지 않은 형식으로 입력했습니다. 다시 입력해 주세요.");
